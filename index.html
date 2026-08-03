@@ -10,6 +10,14 @@
     body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif; background-color: #f0f2f5; color: #333; line-height: 1.6; padding: 15px; margin: 0; }
     .header { text-align: center; padding: 10px 0 20px; }
     .header h1 { color: #1e3a8a; font-size: 1.4em; margin: 0; }
+    /* ★新規追加：今日の論文エリア用スタイル */
+    .article-section { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); padding: 20px; margin-top: 30px; border: 1px solid #e5e7eb; }
+    .article-header { font-weight: bold; color: #334155; margin-bottom: 15px; font-size: 1.15em; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    .article-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #cbd5e1; }
+    .article-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+    .article-title { font-size: 0.95em; color: #0f172a; font-weight: 600; line-height: 1.5; margin-bottom: 8px; }
+    .article-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; color: #2563eb; text-decoration: none; font-weight: bold; padding: 6px 12px; background: #eff6ff; border-radius: 6px; transition: 0.2s; }
+    .article-link:hover { background: #dbeafe; color: #1d4ed8; }
 
     /* ★新規追加：本日の学習ポイント用スタイル */
     .summary-box { background: #e0f2fe; border-left: 5px solid #0284c7; padding: 18px; margin-bottom: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
@@ -168,7 +176,9 @@
       const quizzes = result.quizData; 
       const container = document.getElementById('quiz-container');
       
-      // ★新規追加：本日の学習ポイントの表示（1問目にデータがある場合のみ表示）
+      // ==========================================
+      // ① 本日の学習ポイント描画
+      // ==========================================
       const summaryText = quizzes[0] && quizzes[0].summary ? quizzes[0].summary : "";
       if (summaryText) {
         const summaryHtml = `
@@ -177,9 +187,61 @@
             <div class="summary-text">${summaryText}</div>
           </div>
         `;
-        container.insertAdjacentHTML('beforebegin', summaryHtml);
+        // ▼これが消えていたので復活
+        container.insertAdjacentHTML('beforebegin', summaryHtml); 
       }
 
+      // ==========================================
+      // ② クイズの描画
+      // ==========================================
+      quizzes.forEach((data, index) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        
+        const options = [data.option1, data.option2, data.option3, data.option4].filter(o => o && o.trim() !== "");
+        let optionsHtml = '';
+        options.forEach((opt, i) => {
+          optionsHtml += `<div class="option" onclick="selectOption(this, ${index})">${i + 1}. ${opt}</div>`;
+        });
+
+        const imageHtml = data.image ? `<img src="${data.image}" class="q-image" alt="問題画像">` : '';
+
+        card.innerHTML = `
+          <div class="question-text">問${index + 1}. ${data.question}</div>
+          ${imageHtml}
+          <div class="options-group">${optionsHtml}</div>
+          <button id="ans-btn-${index}" class="btn btn-answer" onclick="toggleAnswer(${index})"><i class="fa-solid fa-check-double"></i> 回答と解説を見る</button>
+          <div id="expl-${index}" class="explanation-area">
+            <h4>正解：${data.answer}</h4>
+            <p>${data.explanation}</p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // ==========================================
+      // ③ 今日の論文エリアの描画
+      // ==========================================
+      const articles = result.articleData || [];
+      if (articles.length > 0) {
+        let articleHtml = `<div class="article-section">
+          <div class="article-header"><i class="fa-solid fa-file-medical"></i> 今日の論文</div>`;
+        
+        articles.forEach(art => {
+          articleHtml += `
+            <div class="article-item">
+              <div class="article-title">${art.title}</div>
+              <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="article-link">
+                論文を読む <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+            </div>
+          `;
+        });
+        articleHtml += `</div>`;
+        
+        // クイズコンテナのすぐ下（解約ボタンの上）に挿入
+        container.insertAdjacentHTML('afterend', articleHtml); 
+      }
       quizzes.forEach((data, index) => {
         const card = document.createElement('div');
         card.className = 'quiz-card';
