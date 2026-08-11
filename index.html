@@ -176,10 +176,18 @@
       const quizzes = result.quizData; 
       const container = document.getElementById('quiz-container');
       
-      // ==========================================
+// ==========================================
       // ① 本日の学習ポイント描画
       // ==========================================
-      const summaryText = quizzes[0] && quizzes[0].summary ? quizzes[0].summary : "";
+      // ★修正：3問のうち、どこかにある学習ポイントを探して最初の1つを取得する
+      let summaryText = "";
+      for (let i = 0; i < quizzes.length; i++) {
+        if (quizzes[i] && quizzes[i].summary) {
+          summaryText = quizzes[i].summary;
+          break; // 見つかったら探すのをやめる
+        }
+      }
+
       if (summaryText) {
         const summaryHtml = `
           <div class="summary-box">
@@ -187,7 +195,6 @@
             <div class="summary-text">${summaryText}</div>
           </div>
         `;
-        // ▼これが消えていたので復活
         container.insertAdjacentHTML('beforebegin', summaryHtml); 
       }
 
